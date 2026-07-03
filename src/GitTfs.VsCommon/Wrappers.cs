@@ -108,6 +108,14 @@ namespace GitTfs.VsCommon
 
     public class WrapperForItem : WrapperFor<Item>, IItem
     {
+        // Changeset file content download is the highest-frequency, most failure-prone
+        // network call in a long clone/fetch, so it is wrapped in an exponential-backoff
+        // retry. The cap bounds the worst case (a permanent fault) to roughly
+        // 2 + 4 + 8 + 16 = 30s of waiting across the 5 attempts.
+        private static readonly TimeSpan DownloadInitialInterval = TimeSpan.FromSeconds(2);
+        private const int DownloadRetryCount = 5;
+        private static readonly TimeSpan DownloadMaxInterval = TimeSpan.FromSeconds(30);
+
         private readonly TfsApiBridge _bridge;
         private readonly Item _item;
 
@@ -132,11 +140,15 @@ namespace GitTfs.VsCommon
             var temp = new TemporaryFile();
             try
             {
-                _item.DownloadFile(temp);
+                // Download is idempotent — it overwrites the same temp path — so retrying
+                // is safe and there is no need to recreate the TemporaryFile between attempts.
+                Retry.DoWithBackoff(() => _item.DownloadFile(temp),
+                    DownloadInitialInterval, DownloadRetryCount, DownloadMaxInterval);
                 return temp;
             }
             catch (Exception)
             {
+                // Reached only once retries are exhausted (or the fault was non-transient).
                 Trace.WriteLine($"Something went wrong when downloading \"{_item.ServerItem}\" from changeset {_item.ChangesetId}");
                 temp.Dispose();
                 throw;
