@@ -15,10 +15,42 @@ namespace GitTfs.Core
         /// </summary>
         private static readonly Encoding _encoding = new UTF8Encoding(false, true);
 
+        private static readonly IEnumerable<string> _nonUtf8Solutions = new[]
+        {
+            "The git history may contain commits authored with a non-UTF-8 encoding (for example legacy Shift-JIS text). "
+                + "git-tfs decodes git output as strict UTF-8 and cannot convert such bytes safely.",
+        };
+
         public GitHelpers(IContainer container)
         {
             _container = container;
         }
+
+        /// <summary>
+        /// git output is decoded as strict UTF-8 (see <see cref="_encoding"/>), so invalid bytes
+        /// surface as a bare <see cref="DecoderFallbackException"/> during a read that gives no hint
+        /// about the cause. Run reads of git output through this so that failure is rethrown as a
+        /// <see cref="GitTfsException"/> explaining the likely reason. The strict decoding policy is
+        /// intentionally unchanged: replacing invalid bytes would bake silent corruption into the
+        /// converted git history.
+        /// </summary>
+        public static T TranslateDecoderErrors<T>(Func<T> readOutput)
+        {
+            try
+            {
+                return readOutput();
+            }
+            catch (DecoderFallbackException e)
+            {
+                throw new GitTfsException("git produced output that is not valid UTF-8.", _nonUtf8Solutions, e);
+            }
+        }
+
+        public static void TranslateDecoderErrors(Action readOutput) => TranslateDecoderErrors(() =>
+        {
+            readOutput();
+            return 0;
+        });
 
         /// <summary>
         /// Runs the given git command, and returns the contents of its STDOUT.
@@ -52,7 +84,7 @@ namespace GitTfs.Core
                                                                                                                               {
                                                                                                                                   AssertValidCommand(command);
                                                                                                                                   var process = Start(command, RedirectStdout);
-                                                                                                                                  handleOutput(process.StandardOutput);
+                                                                                                                                  TranslateDecoderErrors(() => handleOutput(process.StandardOutput));
                                                                                                                                   Close(process);
                                                                                                                               });
 
@@ -96,17 +128,17 @@ namespace GitTfs.Core
 
             public override object InitializeLifetimeService() => _process.StandardOutput.InitializeLifetimeService();
 
-            public override int Peek() => _process.StandardOutput.Peek();
+            public override int Peek() => TranslateDecoderErrors(() => _process.StandardOutput.Peek());
 
-            public override int Read() => _process.StandardOutput.Read();
+            public override int Read() => TranslateDecoderErrors(() => _process.StandardOutput.Read());
 
-            public override int Read(char[] buffer, int index, int count) => _process.StandardOutput.Read(buffer, index, count);
+            public override int Read(char[] buffer, int index, int count) => TranslateDecoderErrors(() => _process.StandardOutput.Read(buffer, index, count));
 
-            public override int ReadBlock(char[] buffer, int index, int count) => _process.StandardOutput.ReadBlock(buffer, index, count);
+            public override int ReadBlock(char[] buffer, int index, int count) => TranslateDecoderErrors(() => _process.StandardOutput.ReadBlock(buffer, index, count));
 
-            public override string ReadLine() => _process.StandardOutput.ReadLine();
+            public override string ReadLine() => TranslateDecoderErrors(() => _process.StandardOutput.ReadLine());
 
-            public override string ReadToEnd() => _process.StandardOutput.ReadToEnd();
+            public override string ReadToEnd() => TranslateDecoderErrors(() => _process.StandardOutput.ReadToEnd());
 
             public override string ToString() => _process.StandardOutput.ToString();
         }
@@ -123,7 +155,7 @@ namespace GitTfs.Core
                                                                                                                                            {
                                                                                                                                                AssertValidCommand(command);
                                                                                                                                                var process = Start(command, Ext.And<ProcessStartInfo>(RedirectStdin, RedirectStdout));
-                                                                                                                                               interact(process.StandardInput.WithEncoding(_encoding), process.StandardOutput);
+                                                                                                                                               TranslateDecoderErrors(() => interact(process.StandardInput.WithEncoding(_encoding), process.StandardOutput));
                                                                                                                                                Close(process);
                                                                                                                                            });
 
