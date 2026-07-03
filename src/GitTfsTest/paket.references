@@ -3,5 +3,6 @@ xunit
 xunit.runner.visualstudio
 Moq
 nlog
+NLog.Targets.Trace
 structuremap
 StructureMap.AutoMocking

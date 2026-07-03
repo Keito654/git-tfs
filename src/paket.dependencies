@@ -8,14 +8,15 @@ source https://api.nuget.org/v3/index.json
 //because there is some subtleties on how we use it in our project:
 //https://github.com/git-tfs/git-tfs/blob/master/doc/paket.md
 
-nuget nlog
-nuget LibGit2Sharp
-nuget Moq
+nuget nlog ~> 6.1
+nuget NLog.Targets.Trace ~> 6.0
+nuget LibGit2Sharp ~> 0.31
+nuget Moq ~> 4.20
 nuget structuremap 2.6.4.1
 nuget StructureMap.AutoMocking 2.6.4.1
-nuget xunit
-nuget xunit.assert
-nuget xunit.runner.visualstudio version_in_path: true
+nuget xunit ~> 2.9
+nuget xunit.assert ~> 2.9
+nuget xunit.runner.visualstudio ~> 2.8 version_in_path: true
 
 group Build
     redirects: off
@@ -35,6 +36,11 @@ group VS2015
 	source https://api.nuget.org/v3/index.json
 	nuget Microsoft.TeamFoundationServer.Client ~> 14.0
 	nuget Microsoft.TeamFoundationServer.ExtendedClient ~> 14.0
+	nuget Newtonsoft.Json ~> 13.0.4
+	nuget System.IdentityModel.Tokens.Jwt ~> 5.7.0
+	nuget Microsoft.IdentityModel.JsonWebTokens ~> 5.7.0
+	nuget Microsoft.IdentityModel.Tokens ~> 5.7.0
+	nuget Microsoft.IdentityModel.Logging ~> 5.7.0
 
 
 group VS2017
@@ -44,6 +50,16 @@ group VS2017
 	nuget Microsoft.TeamFoundationServer.ExtendedClient ~> 15.0
 	nuget Microsoft.VisualStudio.Setup.Configuration.Interop
 	nuget Microsoft.VisualStudio.Settings.15.0 ~> 15.0
+	nuget Newtonsoft.Json ~> 13.0.4
+	nuget MessagePack ~> 2.5.192
+	nuget System.IdentityModel.Tokens.Jwt ~> 6.36
+	nuget Microsoft.IdentityModel.JsonWebTokens ~> 6.36
+	nuget Microsoft.IdentityModel.Tokens ~> 6.36
+	nuget Microsoft.IdentityModel.Logging ~> 6.36
+	nuget Microsoft.IdentityModel.Abstractions ~> 6.36
+	nuget Microsoft.Rest.ClientRuntime ~> 2.3.24
+	nuget System.Text.Json ~> 8.0
+	nuget Microsoft.Bcl.AsyncInterfaces ~> 8.0
 
 
 group VS2019
@@ -53,6 +69,15 @@ group VS2019
 	nuget Microsoft.TeamFoundationServer.ExtendedClient ~> 16.0
 	nuget Microsoft.VisualStudio.Setup.Configuration.Interop
 	nuget Microsoft.VisualStudio.Settings.15.0 ~> 16.0
+	nuget Newtonsoft.Json ~> 13.0.4
+	nuget MessagePack ~> 2.5.192
+	nuget System.IdentityModel.Tokens.Jwt ~> 6.36
+	nuget Microsoft.IdentityModel.JsonWebTokens ~> 6.36
+	nuget Microsoft.IdentityModel.Tokens ~> 6.36
+	nuget Microsoft.IdentityModel.Logging ~> 6.36
+	nuget Microsoft.IdentityModel.Abstractions ~> 6.36
+	nuget System.Text.Json ~> 8.0
+	nuget Microsoft.Bcl.AsyncInterfaces ~> 8.0
 
 group VS2022
 	framework: net48
@@ -61,3 +86,12 @@ group VS2022
 	nuget Microsoft.TeamFoundationServer.ExtendedClient ~> 16.0
 	nuget Microsoft.VisualStudio.Setup.Configuration.Interop
 	nuget Microsoft.VisualStudio.Settings.15.0 ~> 17.0
+	nuget Newtonsoft.Json ~> 13.0.4
+	nuget MessagePack ~> 2.5.192
+	nuget System.IdentityModel.Tokens.Jwt ~> 6.36
+	nuget Microsoft.IdentityModel.JsonWebTokens ~> 6.36
+	nuget Microsoft.IdentityModel.Tokens ~> 6.36
+	nuget Microsoft.IdentityModel.Logging ~> 6.36
+	nuget Microsoft.IdentityModel.Abstractions ~> 6.36
+	nuget System.Text.Json ~> 8.0
+	nuget Microsoft.Bcl.AsyncInterfaces ~> 8.0
