@@ -24,20 +24,18 @@ namespace GitTfs.VsCommon
                 {
                     return action();
                 }
-                catch (Microsoft.TeamFoundation.TeamFoundationServerException ex)
+                // Preserve the historical behaviour for TFS server errors and GitTfsException
+                // (the latter also lets a wrapped MappingConflictException through), and additionally
+                // retry the broader set of transient network faults classified by GitTfs core
+                // (SocketException / IOException / TimeoutException / WebException, including wrapped ones).
+                catch (Exception ex) when (ex is Microsoft.TeamFoundation.TeamFoundationServerException
+                                           || ex is GitTfsException
+                                           || RetryPolicy.IsTransient(ex))
                 {
                     exceptions.Add(ex);
-                    Thread.Sleep(retryInterval);
-                }
-                catch (System.Net.WebException ex)
-                {
-                    exceptions.Add(ex);
-                    Thread.Sleep(retryInterval);
-                }
-                catch (GitTfsException ex) // allows continue of catch (MappingConflictException e) throw as innerexception
-                {
-                    exceptions.Add(ex);
-                    Thread.Sleep(retryInterval);
+                    // Don't sleep after the final attempt: there is no retry left to wait for.
+                    if (retry < retryCount - 1)
+                        Thread.Sleep(retryInterval);
                 }
             }
 
